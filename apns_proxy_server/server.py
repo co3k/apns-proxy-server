@@ -7,11 +7,12 @@ import traceback
 import simplejson as json
 import zmq
 
-from . import worker
+from . import feedback, worker
 
 COMMAND_LENGTH = 1
 COMMAND_ASK_ADDRESS = b'\1'
 COMMAND_SEND = b'\2'
+COMMAND_FEEDBACK = b'\3'
 
 
 class APNSProxyServer(object):
@@ -79,6 +80,13 @@ class APNSProxyServer(object):
             return str(self.port_for_pull)
         elif command == COMMAND_SEND:
             self.dispatch_queue(message[1:])
+        elif command == COMMAND_FEEDBACK:
+            conn = feedback.FeedbackProxy(
+                self.app_config[0]['sandbox'],
+                self.app_config[0]['cert_file'],
+                self.app_config[0]['key_file'],
+            )
+            return conn.get()
         else:
             logging.warn('Unknown command received %s' % command)
 
